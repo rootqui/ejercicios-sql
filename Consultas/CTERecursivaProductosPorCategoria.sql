@@ -1,24 +1,31 @@
-with ListaProductosCategoria
-as
+WITH ListaProductosCategoria
+AS
 (
-	select p.ProductID + (select count(1) from Categories) as ProductID, p.ProductName, p.CategoryID
-	from Products as p
-	union all 
-	select c.CategoryID, c.CategoryName, null 
-	from Categories as c
+	SELECT ROW_NUMBER() OVER(ORDER BY CategoryID) AS Id, *
+	FROM
+		(SELECT p.ProductID AS Codigo, 
+				p.ProductName, 
+				p.CategoryID
+		FROM Products AS p
+		UNION ALL
+		SELECT c.CategoryID, c.CategoryName, NULL
+		FROM Categories AS c) AS td
 ),
 Reporte
-as
+AS
 (
-	select	pc.ProductID as Codigo,
-			convert(varchar(1000), pc.ProductID) as CodigoJerarquico, 
+	SELECT	pc.Id,
+			CAST(pc.Codigo AS VARCHAR) AS CodigoJerarquico, 
 			pc.ProductName
-	from ListaProductosCategoria as pc
-	where pc.CategoryID is null
-	union all
-	select	pc.ProductID,
-			convert(varchar(1000),convert(varchar(1000), r.Codigo) +'.'+convert(varchar(1000),pc.ProductID-8)) as CodigoJerarquico, 
-			pc.ProductName
-	from Reporte as r join ListaProductosCategoria as pc
-		on r.Codigo = pc.CategoryID
-)select * from Reporte order by CodigoJerarquico
+	FROM ListaProductosCategoria AS pc
+	WHERE pc.CategoryID IS NULL
+	UNION ALL
+	SELECT	pc.Id,
+			CAST(CAST(r.Id AS VARCHAR) + '.' + CAST(pc.Codigo AS VARCHAR) AS VARCHAR) AS CodigoJerarquico, 
+			pc.ProductName AS NombreProducto
+	FROM Reporte AS r JOIN ListaProductosCategoria AS pc
+		ON r.Id = pc.CategoryID
+)
+SELECT * 
+FROM Reporte 
+ORDER BY CodigoJerarquico
