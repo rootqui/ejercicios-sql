@@ -10,5 +10,8 @@ RETURN
 	FROM Sales.SalesOrderHeader AS h INNER JOIN Sales.SalesOrderDetail AS d
 		ON d.SalesOrderID = h.SalesOrderID
 	WHERE h.CustomerID = @CustomerID 
-	GROUP BY h.CustomerID, d.ProductID 
+	GROUP BY h.CustomerID, d.ProductID
+	ORDER BY SUM(d.OrderQty) DESC
 )
+
+--select * from dbo.uIF_Top3_Productos_Clientes(29742)
